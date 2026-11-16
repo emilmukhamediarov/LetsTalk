@@ -3,7 +3,7 @@
     public class Conversation
     {
         public Guid Id { get; set; }
-        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         
         //Denormalized fields for fast sidebar rendering
         public DateTimeOffset? LastMessageAt { get; set; }

@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks.Dataflow;
-using LetsTalk.Domain.Enums;
+﻿using LetsTalk.Domain.Enums;
 
 namespace LetsTalk.Domain.Entities
 {
