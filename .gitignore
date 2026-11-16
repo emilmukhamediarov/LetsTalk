@@ -22,6 +22,9 @@ postgres_data/
 *.sql.dump
 *.backup
 *.sqlite
+*-shm
+*-wal
+
 
 # Node.js (if using npm)
 node_modules/
