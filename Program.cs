@@ -1,4 +1,5 @@
 using LetsTalk.Hubs;
+using LetsTalk.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace LetsTalk
@@ -9,6 +10,8 @@ namespace LetsTalk
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
