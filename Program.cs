@@ -1,4 +1,5 @@
 using LetsTalk.Hubs;
+using Microsoft.EntityFrameworkCore;
 
 namespace LetsTalk
 {
@@ -8,14 +9,22 @@ namespace LetsTalk
         {
             var builder = WebApplication.CreateBuilder(args);
 
+
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+
             builder.Services.AddSignalR();
 
             var app = builder.Build();
 
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
             app.UseHttpsRedirection();
-            app.MapStaticAssets();
-            app.MapHub<ChatHub>("/ChatHub");
-            app.MapGet("/", () => Results.File("index.html", "text/html"));
+            //app.MapHub<ChatHub>("/ChatHub");
 
             app.Run();
         }
