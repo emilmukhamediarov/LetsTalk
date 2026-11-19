@@ -1,4 +1,5 @@
 using LetsTalk.Hubs;
+using LetsTalk.Options;
 using LetsTalk.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +13,11 @@ namespace LetsTalk
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddOptions<JwtOptions>()
+                .BindConfiguration("Jwt")
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();

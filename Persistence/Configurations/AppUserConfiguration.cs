@@ -9,10 +9,17 @@ namespace LetsTalk.Persistence.Configurations
         public void Configure(EntityTypeBuilder<AppUser> builder)
         {
             builder.Property(u => u.UserName)
-                   .HasMaxLength(20);
+                 .HasMaxLength(20);
 
             builder.HasIndex(u => u.UserName)
-                   .IsUnique();
+                 .IsUnique();
+
+            builder.Property(u => u.Email)
+                .HasMaxLength(256);
+
+            builder.HasIndex(u => u.Email)
+                .IsUnique();
+
         }
     }
 }
