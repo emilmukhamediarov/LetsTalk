@@ -93,5 +93,51 @@ namespace LetsTalk.Controllers
                 value: response);
         }
 
+        [HttpPost("login")]
+        public async Task<ActionResult<AuthResponse>> Login(
+            [FromBody] LoginRequest request,
+            CancellationToken ct)
+        {
+            var normalisedEmail = request.Email!.Trim().ToLowerInvariant();
+            var password = request.Password!;
+
+            var user = await _db.AppUsers
+                .FirstOrDefaultAsync(u => u.Email.ToLower() ==  normalisedEmail, ct);
+
+            if (user is null)
+            {
+                return Unauthorized(new { message = "Invalid credentials." });
+            }
+
+            PasswordVerificationResult passwordResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
+
+            if (passwordResult == PasswordVerificationResult.Failed)
+            {
+                return Unauthorized(new { message = "Invalid credentials." });
+            } else if (passwordResult == PasswordVerificationResult.SuccessRehashNeeded)
+            {
+                user.PasswordHash = _passwordHasher.HashPassword(user, password);
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            user.LastSeenAt = now;
+
+            await _db.SaveChangesAsync(ct);
+
+            var tokenResponse = _tokenService.GenerateToken(user);
+            var userResponse = new AppUserResponse(
+                user.Id,
+                user.UserName,
+                user.CreatedAt,
+                user.LastSeenAt
+                );
+            var response = new AuthResponse(tokenResponse, userResponse);
+
+            return Ok(response);
+
+
+
+        }
+
     }
 }
