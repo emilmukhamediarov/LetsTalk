@@ -1,5 +1,4 @@
-﻿using LetsTalk.Domain.Entities;
-using LetsTalk.DTOs.AppUsers;
+﻿using LetsTalk.DTOs.AppUsers;
 using LetsTalk.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,46 +14,6 @@ namespace LetsTalk.Controllers
         {
             _db = db;
         }
-
-        //[HttpPost]
-        //public async Task<ActionResult<AppUserResponse>> CreateUser(CreateAppUserRequest request)
-        //{
-        //    var normalisedUserName = request.UserName.Trim();
-
-        //    var exist = await _db.AppUsers
-        //        .AnyAsync(u => u.UserName.ToLower() == normalisedUserName.ToLower());
-        //    if (exist)
-        //    {
-        //        return Conflict(new { message = $"Username '{normalisedUserName}' already exists." });
-        //    }
-
-        //    var user = new AppUser
-        //    {
-        //        Id = Guid.NewGuid(),
-        //        UserName = normalisedUserName,
-        //        CreatedAt = DateTimeOffset.UtcNow
-        //    };
-
-        //    _db.AppUsers.Add(user);
-
-        //    try
-        //    {
-        //        await _db.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateException)
-        //    {
-        //        return Conflict(new { message = $"Username '{normalisedUserName}' already exists." });
-        //    }
-
-        //    var response = new AppUserResponse(
-        //        user.Id,
-        //        user.UserName,
-        //        user.CreatedAt,
-        //        user.LastSeenAt
-        //        );
-
-        //    return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, response);
-        //}
 
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<AppUserResponse>> GetUserById(Guid id)

@@ -3,8 +3,7 @@
 namespace LetsTalk.DTOs.Auth
 {
     public record AuthResponse(
-        string AccessToken,
-        DateTimeOffset ExpiresAt,
+        TokenResponse Token,
         AppUserResponse User
         );
 }

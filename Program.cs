@@ -2,6 +2,9 @@ using LetsTalk.Hubs;
 using LetsTalk.Options;
 using LetsTalk.Persistence;
 using Microsoft.EntityFrameworkCore;
+using LetsTalk.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using LetsTalk.Services;
 
 namespace LetsTalk
 {
@@ -18,6 +21,9 @@ namespace LetsTalk
                 .BindConfiguration("Jwt")
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
+
+            builder.Services.AddSingleton<ITokenService, TokenService>();
+            builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
