@@ -1,10 +1,12 @@
-using LetsTalk.Hubs;
 using LetsTalk.Options;
 using LetsTalk.Persistence;
 using Microsoft.EntityFrameworkCore;
 using LetsTalk.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using LetsTalk.Services;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace LetsTalk
 {
@@ -21,6 +23,31 @@ namespace LetsTalk
                 .BindConfiguration("Jwt")
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
+
+            var jwtSection = builder.Configuration.GetSection("Jwt");
+            var jwtKey = jwtSection["Key"] ?? throw new InvalidOperationException("JWT Key is missing");
+
+            builder.Services
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = jwtSection["Issuer"],
+
+                        ValidateAudience = true,
+                        ValidAudience = jwtSection["Audience"],
+
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero
+                    };
+                });
+
+            builder.Services.AddAuthorization();
 
             builder.Services.AddSingleton<ITokenService, TokenService>();
             builder.Services.AddScoped<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
@@ -41,6 +68,8 @@ namespace LetsTalk
 
             app.UseHttpsRedirection();
             //app.MapHub<ChatHub>("/ChatHub");
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllers();
 
