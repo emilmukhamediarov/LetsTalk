@@ -1,6 +1,7 @@
 ﻿using LetsTalk.Domain.Entities;
 using LetsTalk.Domain.Enums;
 using LetsTalk.DTOs.Messages;
+using LetsTalk.Extensions;
 using LetsTalk.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,12 +25,18 @@ namespace LetsTalk.Controllers
             [FromRoute] Guid conversationId,
             [FromBody] SendMessageRequest request)
         {
-            var senderId = request.SenderId!.Value;
+            var userIdClaim = User.GetUserId();
+            if (userIdClaim is null)
+            {
+                return Unauthorized();
+            }
+
+            var senderId = userIdClaim.Value;
             var content = request.Content!.Trim();
 
-            if (conversationId == Guid.Empty || senderId == Guid.Empty)
+            if (conversationId == Guid.Empty)
             {
-                return BadRequest(new { message = "Valid conversationId and senderId are required." });
+                return BadRequest(new { message = "Valid conversationId is required." });
             }
 
             if (string.IsNullOrWhiteSpace(content))
@@ -92,6 +99,14 @@ namespace LetsTalk.Controllers
         [HttpGet]
         public async Task<ActionResult<List<MessageResponse>>> GetMessages(Guid conversationId)
         {
+            var userIdClaim = User.GetUserId();
+            if (userIdClaim is null)
+            {
+                return Unauthorized();
+            }
+
+            var userId = userIdClaim.Value;
+
             if (conversationId == Guid.Empty)
             {
                 return BadRequest(new { message = "Valid conversationId is required."});
@@ -103,7 +118,18 @@ namespace LetsTalk.Controllers
 
             if (!conversationExists)
             {
-                return NotFound(new { message = "Conversation not found."});
+                return NotFound(new { message = "Conversation not found." });
+            }
+
+            var isParticipant = await _db.ConversationParticipants
+                .AsNoTracking()
+                .AnyAsync(cp => cp.ConversationId == conversationId && cp.UserId == userId);
+
+            if (!isParticipant)
+            {
+                return StatusCode(
+                    StatusCodes.Status403Forbidden,
+                    new { message = "User is not a participant in this conversation." });
             }
 
             var messages = await _db.Messages
