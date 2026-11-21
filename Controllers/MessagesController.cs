@@ -2,6 +2,7 @@
 using LetsTalk.Domain.Enums;
 using LetsTalk.DTOs.Messages;
 using LetsTalk.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,7 @@ namespace LetsTalk.Controllers
 {
     [ApiController]
     [Route("api/conversations/{conversationId:guid}/messages")]
+    [Authorize]
     public class MessagesController : ControllerBase
     {
         private readonly AppDbContext _db;

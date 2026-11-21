@@ -1,5 +1,6 @@
 ﻿using LetsTalk.DTOs.AppUsers;
 using LetsTalk.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +8,7 @@ namespace LetsTalk.Controllers
 {
     [ApiController]
     [Route("api/users")]
+    [Authorize]
     public class AppUsersController : ControllerBase
     {
         private readonly AppDbContext _db;

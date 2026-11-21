@@ -1,12 +1,13 @@
+using LetsTalk.Domain.Entities;
 using LetsTalk.Options;
 using LetsTalk.Persistence;
-using Microsoft.EntityFrameworkCore;
-using LetsTalk.Domain.Entities;
-using Microsoft.AspNetCore.Identity;
 using LetsTalk.Services;
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using System.Text;
 
 namespace LetsTalk
 {
@@ -25,7 +26,7 @@ namespace LetsTalk
                 .ValidateOnStart();
 
             var jwtSection = builder.Configuration.GetSection("Jwt");
-            var jwtKey = jwtSection["Key"] ?? throw new InvalidOperationException("JWT Key is missing");
+            var jwtKey = jwtSection["SecretKey"] ?? throw new InvalidOperationException("JWT Key is missing");
 
             builder.Services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -57,6 +58,24 @@ namespace LetsTalk
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddSignalR();
+
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Paste your JWT access token below (without 'Bearer ')."
+                });
+
+                options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+                {
+                    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+                });
+            });
 
             var app = builder.Build();
 

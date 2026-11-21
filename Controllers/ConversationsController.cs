@@ -2,13 +2,16 @@
 using LetsTalk.DTOs.ConversationParticipants;
 using LetsTalk.DTOs.Conversations;
 using LetsTalk.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using LetsTalk.Extensions;
 
 namespace LetsTalk.Controllers
 {
     [ApiController]
     [Route("api/conversations")]
+    [Authorize]
     public class ConversationsController : ControllerBase
     {
         private readonly AppDbContext _db;
@@ -20,10 +23,16 @@ namespace LetsTalk.Controllers
         [HttpPost]
         public async Task<ActionResult<ConversationResponse>> CreateConversation(CreateConversationRequest request)
         {
-            var senderId = request.SenderId!.Value;
+            var senderIdClaim = User.GetUserId();
+            if (senderIdClaim is null)
+            {
+                return Unauthorized();
+            }
+
+            var senderId = senderIdClaim.Value;
             var connectToId = request.ConnectToId!.Value;
 
-            if (senderId == Guid.Empty || connectToId == Guid.Empty || senderId == connectToId)
+            if (connectToId == Guid.Empty || senderId == connectToId)
             {
                 return BadRequest(new { message = "Two distinct, valid user IDs are required." });
             }
@@ -36,7 +45,7 @@ namespace LetsTalk.Controllers
 
             if (users.Count != 2)
             {
-                return NotFound(new { message = "One or both users were not found." });
+                return NotFound(new { message = "The target user not found." });
             }
 
             var participantsResponse = users
@@ -115,9 +124,17 @@ namespace LetsTalk.Controllers
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<ConversationResponse>> GetConversationById(Guid id)
         {
+            var currentUserIdClaim = User.GetUserId();
+            if (currentUserIdClaim is null)
+            {
+                return Unauthorized();
+            }
+
+            var currentUserId = currentUserIdClaim.Value;
+
             var response = await _db.Conversations
                 .AsNoTracking()
-                .Where(c => c.Id == id)
+                .Where(c => c.Id == id && c.Participants.Any(cp => cp.UserId == currentUserId))
                 .Select(c => new ConversationResponse(
                     c.Id,
                     c.CreatedAt,
@@ -138,21 +155,15 @@ namespace LetsTalk.Controllers
             return Ok(response);
         }
         [HttpGet]
-        public async Task<ActionResult<List<ConversationResponse>>> GetUserConversations ([FromQuery] Guid userId)
+        public async Task<ActionResult<List<ConversationResponse>>> GetUserConversations ()
         {
-            if (userId == Guid.Empty)
+            var userIdClaim = User.GetUserId();
+            if (userIdClaim is null)
             {
-                return BadRequest();
+                return Unauthorized();
             }
 
-            var userExists = await _db.AppUsers
-                .AsNoTracking()
-                .AnyAsync(u => u.Id == userId);
-
-            if(!userExists)
-            {
-                return NotFound(new { message = "User not found" });
-            }
+            var userId = userIdClaim.Value;
 
             var conversations = await _db.Conversations
                 .AsNoTracking()
